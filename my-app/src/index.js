@@ -48,10 +48,14 @@ class Game extends React.Component {
         super(props);
         this.state = {
             history:[
-                { squares: Array(9).fill(null) },
+                {
+                    squares: Array(9).fill(null),
+                    moves: [{row: -1, col: -1}],
+                },
             ],
             stepNumber: 0,
             xIsNext: true,
+            increasingOrder: true,
         }
     }
 
@@ -59,18 +63,25 @@ class Game extends React.Component {
         const history = this.state.history.slice(0, this.state.stepNumber + 1);
         const current = history[history.length - 1];
         const squares = current.squares.slice();
+        let moves = current.moves.slice();
         if (getWinner(squares) || squares[i]) {
             return;
         }
 
         squares[i] = this.getMarker();
+        moves = moves.concat([{row: Math.trunc(i / 3), col: i % 3}]);
         this.setState({
             history: history.concat([{
                 squares: squares,
+                moves: moves,
             }]),
             stepNumber: history.length,
             xIsNext: !this.state.xIsNext,
         });
+    }
+
+    handleClickOnSort() {
+        this.setState({increasingOrder: !this.state.increasingOrder});
     }
 
     getMarker() {
@@ -85,23 +96,31 @@ class Game extends React.Component {
     }
 
     render() {
-        const history = this.state.history;
+        let history = this.state.history;
         const current = history[this.state.stepNumber];
         const winner = getWinner(current.squares);
+        let moves = [];
+        for (let move = 0; move < history.length; ++move) {
+            let currentHistory = history[move];
+            let desc = "Go to game start";
+            if (move > 0) {
+                const pos = currentHistory.moves[move];
+                desc = 'Go to move #' + move + ": " + (move % 2 === 0 ? 'O' : 'X') + ' at (' + (pos.row)  + ', ' + (pos.col) + ')';
+            }
 
-        const moves = history.map((step, move) => {
-            const desc = move ?
-                'Go to move #' + move + ": " + (move % 2 === 0 ? 'O' : 'X'):
-                'Go to game start';
-            return (
+            const element = (
                 <li key={move}>
                     <button onClick={() => this.jumpTo(move)}>
                         {desc}
                     </button>
                 </li>
-            );
-        });
-
+            )
+            if (this.state.increasingOrder) {
+                moves.push(element);
+            } else {
+                moves.unshift(element);
+            }
+        }
 
         let status;
         if (winner) {
@@ -117,6 +136,9 @@ class Game extends React.Component {
                         onClick={(i) => this.handleClick(i)}/>
                 </div>
                 <div className="game-info">
+                    <button onClick={() => this.handleClickOnSort()}>
+                        {this.state.increasingOrder ? 'increasing' : 'decresing'}
+                    </button>
                     <div>{status}</div>
                     <ol>{moves}</ol>
                 </div>
