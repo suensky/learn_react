@@ -124,9 +124,13 @@ class Game extends React.Component {
 
         let status;
         if (winner) {
-            status = 'Winnder: ' + winner;
+            status = `Winner: ${winner.id} at ${winner.line.map((value, index) => `(${Math.trunc(value / 3)}, ${value % 3}) `)}`;
         } else {
-            status = 'Next player: ' + this.getMarker();
+            if (this.state.stepNumber < 9) {
+                status = 'Next player: ' + this.getMarker();
+            } else {
+                status = 'Draw';
+            }
         }
         return (
             <div className="game">
@@ -168,7 +172,10 @@ function getWinner(squares) {
     for (let i = 0; i < lines.length; ++i) {
         const [a, b, c] = lines[i];
         if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-            return squares[a];
+            return {
+                id: squares[a],
+                line: lines[i]
+            };
         }
     }
     return null;
